@@ -32,6 +32,7 @@ def get_argparser():
     parser.add_argument('-no_dp_eval', action='store_true',
                         help='perform evaluation without DistributedDataParallel/DataParallel')
     parser.add_argument('-log_config', action='store_true', help='log config')
+    parser.add_argument('--fsim_config', help='Yaml file path fsim config')
     return parser
 
 def accuracy(output, target, topk=(1,)):
@@ -48,21 +49,17 @@ def accuracy(output, target, topk=(1,)):
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
     
+
 def get_transforms(split='train', input_size=(128, 128)):
 
-    if split == 'train':
-        transform = trsf.Compose([
-            trsf.ToTensor(),
-            trsf.RandomRotation(degrees=(-20,20)),
-            trsf.RandomResizedCrop(input_size),
-            trsf.RandomHorizontalFlip(),
-        ])
-    elif split == 'test':
-        transform = trsf.Compose([
-            trsf.ToTensor()
-        ])
+    transform = trsf.Compose([
+        trsf.Compose([
+        trsf.Resize((70, 70)),        
+        trsf.CenterCrop((64, 64)),            
+        trsf.ToTensor(),                
+        trsf.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]),
+    ])
     return transform
-
 
 @torch.inference_mode()
 def evaluate(model_wo_ddp, data_loader, device, device_ids, distributed, no_dp_eval=False,
@@ -159,17 +156,16 @@ def main(args):
     logger.info(config['datasets'])
 
     transformer = get_transforms('test')
-    val_set = STL10('~/dataset/stl10', transform=transformer, download=True, train=False)
-    val_loader = DataLoader(dataset=val_set, batch_size = 128, shuffle=True, pin_memory=True)
+    val_set = torchvision.datasets.CIFAR10('~/dataset/cifar10', transform=transformer, download=True)
+    test_data_loader = DataLoader(dataset=val_set, batch_size = 128, shuffle=True, pin_memory=True)
     
-
-    ckpt_file_path = f'/home/bepi/Desktop/Ph.D_/projects/nvbitFI/code/checkpoint/Squeezenet.pth'
-    state_dict = torch.load(ckpt_file_path, map_location=torch.device('cpu'))['state_dict']
-
-    dnn = torchvision.models.squeezenet1_0()
-
-
-    dnn.load_state_dict(state_dict)
+    ckpt_file_path = '/home/bepi/Desktop/Ph.D_/projects/nvbitFI/code/checkpoint/mnasnet0_5.pth'
+    dnn = torchvision.models.mnasnet0_5()
+    dnn.classifier = torch.nn.Sequential(
+            torch.nn.Dropout(0.2),  # Add dropout for regularization (optional)
+            torch.nn.Linear(1280, 10)  # Adjust the input size to match the MNASNet0.5 output features
+        )
+    dnn.load_state_dict(torch.load(ckpt_file_path)['state_dict'])
 
 
     if args.log_config:
@@ -184,9 +180,9 @@ def main(args):
     test_batch_size=config['test']['test_data_loader']['batch_size']
     test_shuffle=config['test']['test_data_loader']['random_sample']
     test_num_workers=config['test']['test_data_loader']['num_workers']
-    subsampler = DatasetSampling(val_loader.dataset,10)
+    subsampler = DatasetSampling(test_data_loader.dataset,10)
     index_dataset=subsampler.listindex()
-    data_subset=Subset(val_loader.dataset, index_dataset)
+    data_subset=Subset(test_data_loader.dataset, index_dataset)
     dataloader = DataLoader(data_subset,batch_size=test_batch_size, shuffle=test_shuffle,pin_memory=True,num_workers=test_num_workers)
 
 

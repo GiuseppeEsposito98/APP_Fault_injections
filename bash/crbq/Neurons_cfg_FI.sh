@@ -35,8 +35,6 @@ python ${global_PWD}/APP_Fault_injections/script/image_classification_FI_neuron_
         --config ${Sim_dir}/mnasnet.yaml\
         --device cuda\
         --log ${Sim_dir}/mnasnet.log\
-        -test_only\
-        --world_size 1\
         --fsim_config ${Sim_dir}/Fault_descriptor.yaml > ${global_PWD}/${DIR}/lyr${start_layer}_stdo.log 2> ${global_PWD}/${DIR}/lyr${start_layer}_stde.log
 
 echo
