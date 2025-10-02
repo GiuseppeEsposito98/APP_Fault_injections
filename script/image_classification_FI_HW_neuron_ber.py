@@ -212,11 +212,16 @@ def main(args):
         # 4. generate the fault list
         logging.getLogger('pytorchfi').disabled = False
         #logging.getLogger('pytorchfi.neuron_error_models').disabled = True
-        FI_setup.generate_fault_list(flist_mode=conf_fault_dict['fault_info']['neurons_rand_single_layer']['mode_inj'],
-                                        f_list_file='fault_list.csv',
-                                        trials= int(conf_fault_dict['fault_info']['neurons_rand_single_layer']['trials']),
-                                        layer=int(conf_fault_dict['fault_info']['neurons_rand_single_layer']['layer']),
-                                        bers = conf_fault_dict['fault_info']['neurons_rand_single_layer']['ber_list'])    
+        FI_setup.generate_fault_list(flist_mode='neurons',
+                                    f_list_file='fault_list.csv',
+                                    layers=conf_fault_dict['layers'],
+                                    trials=conf_fault_dict['trials'], 
+                                    size_tail_y=conf_fault_dict['size_tail_y'], 
+                                    size_tail_x=conf_fault_dict['size_tail_x'],
+                                    block_fault_rate_delta=conf_fault_dict['block_fault_rate_delta'],
+                                    block_fault_rate_steps=conf_fault_dict['block_fault_rate_steps'],
+                                    neuron_fault_rate_delta=conf_fault_dict['neuron_fault_rate_delta'],
+                                    neuron_fault_rate_steps=conf_fault_dict['neuron_fault_rate_steps'])     
         
         FI_setup.load_check_point()
 
@@ -224,7 +229,7 @@ def main(args):
         for fault,k in FI_setup.iter_fault_list():
             # 5.1 inject the fault in the model
             #FI_setup.FI_framework.bit_flip_weight_inj([fault[0]],[fault[1]],[fault[2]],[fault[3]],[fault[4]],[fault[5]])
-            handles = FI_setup.FI_framework.bit_flip_err_neuron_lyr(fault)
+            handles = FI_setup.FI_framework.bit_flip_err_neuron(fault)
             FI_setup.open_faulty_results(f"F_{k}_results")
             try:   
                 # 5.2 run the inference with the faulty model 

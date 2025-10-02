@@ -16,3 +16,9 @@ fault_info:
     neuron_fault_rate_delta: 0.004
     neuron_fault_rate_steps: 10
     num_threads: 32
+
+  neurons_rand_single_layer:
+    mode_inj: 'neuronsBER'
+    layers: [0]
+    trials: 5
+    bers: [0.0006, 0.0004, 0.0001, 0.00008, 0.00006, 0.00004, 0.00001, 0.000008, 0.000006, 0.000004, 0.000001]
