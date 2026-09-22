@@ -4,8 +4,8 @@ import sys
 
 from pytorchcv.model_provider import get_model as ptcv_get_model
 from pytorchcv.model_provider import _models as ptcv_models
-from foresight.pruners import *
-from foresight.dataset import *
+from zero_cost_nas.foresight.pruners import *
+from zero_cost_nas.foresight.dataset import *
 
 from pytorchfi.FI_Weights_classification import FI_manager 
 from pytorchfi.FI_Weights_classification import DatasetSampling 
@@ -13,6 +13,12 @@ from pytorchfi.FI_Weights_classification import DatasetSampling
 from torch.utils.data import DataLoader, Subset
 import logging
 from utils import *
+import torch
+import argoarse
+
+logger=logging.getLogger(__name__) 
+logger.setLevel(logging.WARNING) 
+
 
 
 def main(args):
@@ -20,9 +26,11 @@ def main(args):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+    logger.info(f'Cuda available: {torch.cuda.is_available()}')
+
     test_batch_size=32
 
-    train_loader, val_loader = get_cifar_dataloaders(32, test_batch_size, 'cifar10', 1, datadir='../../_dataset')
+    train_loader, val_loader = get_cifar_dataloaders(32, test_batch_size, args.data, 1, datadir='../../_dataset')
 
     net = ptcv_get_model('preresnet20_cifar10', pretrained=1)
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
@@ -45,7 +53,7 @@ def main(args):
         # 2. Run a fault free scenario to generate the golden model
         FI_setup.open_golden_results("Golden_results")
         evaluate(net, val_loader, device=device,
-                title='[DNN under test: {}]'.format(type(net)), header='Golden', fsim_enabled=True, Fsim_setup=FI_setup) 
+                title='[DNN under test: {}]'.format(type(net)), header='Golden', fsim_enabled=True, Fsim_setup=FI_setup, handles=None) 
         FI_setup.close_golden_results()
 
         # 3. Prepare the Model for fault injections
@@ -55,7 +63,7 @@ def main(args):
                                             layer_types=[torch.nn.Conv2d, torch.nn.Linear],Neurons=True)
         
         # 4. generate the fault list
-        logging.getLogger('pytorchfi').disabled = False
+        logging.getLogger('extended_pytorchfi').disabled = True
         #logging.getLogger('pytorchfi.neuron_error_models').disabled = True
         FI_setup.generate_fault_list(flist_mode=conf_fault_dict['fault_info']['neurons_rand_single_layer']['mode_inj'],
                                         f_list_file='fault_list.csv',
@@ -70,11 +78,11 @@ def main(args):
             print(f'Injecting fault {k} in: {fault}')
             # 5.1 inject the fault in the model
             #FI_setup.FI_framework.bit_flip_weight_inj([fault[0]],[fault[1]],[fault[2]],[fault[3]],[fault[4]],[fault[5]])
-            handles = FI_setup.FI_framework.bit_flip_err_neuron_lyr(fault)
+            FI_setup.FI_framework.bit_flip_err_neuron_lyr(fault)
             FI_setup.open_faulty_results(f"F_{k}_results")
             try:
                 evaluate(FI_setup.FI_framework.faulty_model, val_loader, device=device,
-                    title='[DNN under test: {}]'.format(type(net)), header='FSIM', fsim_enabled=True,Fsim_setup=FI_setup)
+                    title='[DNN under test: {}]'.format(type(net)), header='FSIM', fsim_enabled=True,Fsim_setup=FI_setup, handles=None)
             except OSError as Oserr:
                 msg=f"Oserror: {Oserr}"
                 logger.info(msg)

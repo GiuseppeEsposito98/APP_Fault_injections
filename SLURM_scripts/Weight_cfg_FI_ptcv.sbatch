@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 #SBATCH --nodes=1
-#SBATCH --partition=cuda
+#SBATCH --partition=gpu_v100
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks-per-node=8
 #SBATCH --job-name=WSBF
@@ -12,10 +12,10 @@
 source ~/miniconda3/bin/activate
 conda deactivate
 
-cd  ~APP_Fault_injections
+cd  ~/APP_Fault_injections
 
 conda activate APP
-module load nvidia/cudasdk/11.6
+# module load nvidia/cudasdk/11.6
 
 PWD=`pwd`
 echo ${PWD}
@@ -28,6 +28,7 @@ job_id=0
 
 target_layer="$1"
 DIR="$2"
+data="$3"
 
 Sim_dir=${global_PWD}/${DIR}/lyr${target_layer}_JOBID${job_id}_W
 mkdir -p ${Sim_dir}
@@ -38,5 +39,5 @@ sed -i "s/layer: \[.*\]/layer: \[$target_layer\]/" ${Sim_dir}/Fault_descriptor.y
 cd ${Sim_dir}
 
 python ${global_PWD}/script/resnet20_sbfm.py\
-        --fsim_config ${Sim_dir}/Fault_descriptor.yaml > ${global_PWD}/${DIR}/lyr${target_layer}_stdo.log # 2> ${global_PWD}/${DIR}/lyr${target_layer}_stde.log
+        --fsim_config ${Sim_dir}/Fault_descriptor.yaml --data ${data} > ${global_PWD}/${DIR}/lyr${target_layer}_stdo.log # 2> ${global_PWD}/${DIR}/lyr${target_layer}_stde.log
 

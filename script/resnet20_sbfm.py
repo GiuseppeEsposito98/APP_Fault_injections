@@ -3,8 +3,8 @@ import yaml
 
 from pytorchcv.model_provider import get_model as ptcv_get_model
 from pytorchcv.model_provider import _models as ptcv_models
-from foresight.pruners import *
-from foresight.dataset import *
+from zero_cost_nas.foresight.pruners import *
+from zero_cost_nas.foresight.dataset import *
 
 from pytorchfi.FI_Weights_classification import FI_manager 
 from pytorchfi.FI_Weights_classification import DatasetSampling 
@@ -41,7 +41,12 @@ def main(args):
         print('----- Golden Run -----')
         FI_setup.open_golden_results("Golden_results")
         evaluate(net, val_loader, device=device,
-                title='[DNN under test: {}]'.format(type(net)), header='Golden', fsim_enabled=True, Fsim_setup=FI_setup)
+            title='[DNN under test: {}]'.format(type(net)), 
+            header='Golden', 
+            fsim_enabled=True, 
+            Fsim_setup=FI_setup, 
+            handles=None
+            ) 
         FI_setup.close_golden_results()
 
         # 3. Prepare the Model for fault injections
@@ -64,7 +69,7 @@ def main(args):
             try:   
                 # 5.2 run the inference with the faulty model 
                 evaluate(FI_setup.FI_framework.faulty_model, val_loader, device=device,
-                    title='[DNN under test: {}]'.format(type(net)), header='FSIM', fsim_enabled=True,Fsim_setup=FI_setup)        
+                    title='[DNN under test: {}]'.format(type(net)), header='FSIM', fsim_enabled=True,Fsim_setup=FI_setup, handles=None)      
             except Exception as Error:
                 msg=f"Exception error: {Error}"
                 # logger.info(msg)
