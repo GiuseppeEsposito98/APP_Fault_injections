@@ -1,0 +1,69 @@
+# Environment for the fault injection scripts in script/ (resnet20_* and stm_*)
+# Python 3.10 (tensorflow 2.18 requires 3.9-3.12)
+#
+#   conda create -n APP python=3.10
+#   conda activate APP
+#   pip install -r requirements.txt
+#   pip install --no-deps -e ./extended_pytorchfi
+#
+# extended_pytorchfi is installed with --no-deps because its setup.py pins
+# pyyaml==5.4.1, which does not build on recent Python/Cython; its real
+# dependencies are listed below.
+
+# ---------------------------------------------------------------------------
+# PyTorch
+# ---------------------------------------------------------------------------
+torch==2.7.1
+torchvision==0.22.1
+torchaudio==2.7.1
+
+# ---------------------------------------------------------------------------
+# STM32 model zoo services (stm32ai-modelzoo-services/requirements.txt)
+# api.py imports every use case, so all of them are needed even for
+# image classification only
+# ---------------------------------------------------------------------------
+timm==1.0.19
+einops
+pesq==0.0.4
+pystoi==0.4.1
+tensorflow==2.18.0
+keras==3.8.0
+mlflow==2.20.0
+hydra-core==1.3.2
+wget==3.2
+munch==4.0.0
+seaborn==0.13.2
+tqdm==4.67.1
+onnx==1.16.1
+onnxruntime==1.20.1
+optuna==4.1.0
+imgaug==0.4.0
+librosa==0.10.2.post1
+pyserial==3.5
+Requests==2.28.2
+urllib3==1.26.13
+marshmallow==3.24.1
+tf2onnx==1.16.1
+tabulate==0.9.0
+colorama==0.4.6
+clearml==1.16.5
+neural-compressor==3.4.1
+pytorchcv==0.0.73
+pyvww==0.1.1
+texttable==1.7.0
+pycocotools==2.0.7
+thop==0.1.1.post2209072238
+loguru==0.7.3
+pyopenssl==26.4.0
+
+# ---------------------------------------------------------------------------
+# Fault injection (extended_pytorchfi, zero_cost_nas, script/utils.py)
+# ---------------------------------------------------------------------------
+torchmetrics==1.5.2
+pandas
+matplotlib
+numpy
+scipy
+pyyaml
+cython
+Pillow

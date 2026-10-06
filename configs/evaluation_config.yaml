@@ -1,0 +1,41 @@
+operation_mode: evaluation
+
+general:
+  display_figures: False
+  
+model: 
+  framework: 'torch'
+  model_name: 'mobilenetv2_w035_pt' 
+  pretrained: True
+  pretrained_dataset: "imagenet"
+  input_shape: [3, 224, 224]
+
+dataset:
+  dataset_name: "imagenet"
+  data_dir: "/home/g.esposito/datasets"
+  num_classes: 1000
+  classes_file_path: ./datasets/deployment_labels_imagenet.txt
+  workers: 4
+  no_prefetcher: true
+  data_download: true
+  test_path: "/home/g.esposito/datasets/imagenet/val"
+  val_split: "val"
+
+preprocessing: 
+  rescaling: # Not used for Torch Image Classification
+    scale: None # Not used for Torch Image Classification
+    offset: None # Not used for Torch Image Classification
+  resizing:
+    interpolation: random # 'random' means random.choice(["bilinear", "bicubic"]). This will be used for training data and bilinear is fixed for test data 
+    aspect_ratio: fit # fit is the only aspect_ratio supported for torch image classification.
+  color_mode: rgb # rgb is the only color_mode supported  for torch image classification.
+  normalization:
+    mean: [0.485, 0.456, 0.406] # Subtracted from each channel: (x - mean) / std
+    std: [0.229, 0.224, 0.225] # Divides each channel after mean subtraction
+
+mlflow:
+  uri: ./pt/src/experiments_outputs/mlruns
+
+hydra:
+  run:
+    dir: ./pt/src/experiments_outputs/${now:%Y_%m_%d_%H_%M_%S}

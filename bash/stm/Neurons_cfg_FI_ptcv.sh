@@ -1,22 +1,5 @@
 #!/bin/bash
-#SBATCH --time=24:00:00
-#SBATCH --nodes=1
-#SBATCH --partition=gpu_a40
-#SBATCH --gres=gpu:1
-#SBATCH --ntasks-per-node=8
-#SBATCH --job-name=Neurons
-#SBATCH --mail-type=ALL
-#SBATCH --mem-per-cpu=40000
-#SBATCH --mail-user=giuseppe.esposito@polito.it
 
-# 1 Activate the virtual environment
-source ~/miniconda3/bin/activate
-conda deactivate
-
-cd  ~/APP_Fault_injections
-
-conda activate APP
-# module load nvidia/cudasdk/11.6
 
 PWD=`pwd`
 echo ${PWD}
@@ -24,8 +7,6 @@ global_PWD="$PWD"
 export PYTHONPATH="$PWD"
 echo ${CUDA_VISIBLE_DEVICES}
 
-nvidia-smi
-python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.backends.cudnn.version()); print(torch.cuda.is_available())"
 
 job_id=0
 

@@ -13,6 +13,7 @@ job_id=0
 start_layer="$1"
 stop_layer="$2"
 DIR="$3"
+data="$4"
 
 Sim_dir=${global_PWD}/${DIR}/lyr${start_layer}_${stop_layer}_JOBID${job_id}_N
 mkdir -p ${Sim_dir}
@@ -24,4 +25,5 @@ sed -i "s/trials: [0-9.]\+/trials: 5/" ${Sim_dir}/Fault_descriptor.yaml
 cd ${Sim_dir}
 
 python ${global_PWD}/script/resnet20_HW_neuron_ber.py\
-        --fsim_config ${Sim_dir}/Fault_descriptor.yaml > ${global_PWD}/${DIR}/lyr${target_layer}_stdo.log # 2> ${global_PWD}/${DIR}/lyr${target_layer}_stde.log
+        --fsim_config ${Sim_dir}/Fault_descriptor.yaml \
+        --data ${data} &> ${global_PWD}/${DIR}/lyr${target_layer}_stdo.log # 2> ${global_PWD}/${DIR}/lyr${target_layer}_stde.log

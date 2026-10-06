@@ -10,6 +10,7 @@ def get_argparser():
     parser.add_argument('--fsim_config', help='Yaml file path fsim config')
     # parser.add_argument('--nn', help='Target Neural Network architecture')
     parser.add_argument('--data', help='Target dataset')
+    parser.add_argument('--useSTM', required=False, action='store_true', help='Boolean whether to use the STM model zoo or not')
     return parser
 
 def accuracy(output, target, topk=(1,)):
@@ -26,7 +27,8 @@ def accuracy(output, target, topk=(1,)):
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
 
-def evaluate(net, val_loader, device, title, fsim_enabled, Fsim_setup, header, handles):
+@torch.no_grad()
+def evaluate(net, val_loader, device, title, fsim_enabled, Fsim_setup, header, handles, num_classes=10):
     print(title)
     net = net.to(device)
     
@@ -50,6 +52,7 @@ def evaluate(net, val_loader, device, title, fsim_enabled, Fsim_setup, header, h
         val_targ = torch.cat((cpu_target, val_targ), dim = -1)
 
         if fsim_enabled==True:
+            # Fsim_setup.FI_report.update_classification_report(batch,distr,target,topk=(1,10))
             Fsim_setup.FI_report.update_classification_report(batch,distr,target,topk=(1,10))
         
         
@@ -64,17 +67,17 @@ def evaluate(net, val_loader, device, title, fsim_enabled, Fsim_setup, header, h
 
     if fsim_enabled==True:
         val_targ = val_targ.type(torch.int64)
-        f1_1 = MulticlassF1Score(num_classes=10, average='macro')
-        rec_1 = MulticlassRecall(average='macro', num_classes=10)
-        prec_1 = MulticlassPrecision(average='macro', num_classes=10)
+        f1_1 = MulticlassF1Score(num_classes=num_classes, average='macro')
+        rec_1 = MulticlassRecall(average='macro', num_classes=num_classes)
+        prec_1 = MulticlassPrecision(average='macro', num_classes=num_classes)
 
         best_f1 = f1_1(val_distr, val_targ)
         best_rec = rec_1(val_distr, val_targ)
         best_prec = prec_1(val_distr, val_targ)
 
-        f1_k = MulticlassF1Score(num_classes=10, average='macro', top_k=5)
-        rec_k = MulticlassRecall(num_classes=10, average='macro', top_k=5)
-        prec_k = MulticlassPrecision(num_classes=10, average='macro', top_k=5)
+        f1_k = MulticlassF1Score(num_classes=num_classes, average='macro', top_k=5)
+        rec_k = MulticlassRecall(num_classes=num_classes, average='macro', top_k=5)
+        prec_k = MulticlassPrecision(num_classes=num_classes, average='macro', top_k=5)
         k_f1 = f1_k(val_distr, val_targ)
         k_rec = rec_k(val_distr, val_targ)
         k_prec = prec_k(val_distr, val_targ)
